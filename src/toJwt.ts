@@ -1,5 +1,5 @@
 import uuid = require("uuid");
-import { PublicCovidPass } from "./PublicCovidPass";
+import { PublicCovidPass } from "./publicCovidPass";
 
 const claims = {
     1: "iss",

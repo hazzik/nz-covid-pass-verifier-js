@@ -1,8 +1,8 @@
 import cbor = require("cbor");
-import { VerifierOptions } from "./VerifierOptions";
+import { VerifierOptions } from "./verifierOptions";
 import { resolvePublicKey } from "./resolvePublicKey";
 import { parseURI } from "./parseURI";
-import { PublicCovidPass } from "./PublicCovidPass";
+import { PublicCovidPass } from "./publicCovidPass";
 import { toJwt } from "./toJwt";
 import { verifySignature } from "./verifySignature";
 
