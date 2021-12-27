@@ -1,31 +1,13 @@
-import base32Decode = require("base32-decode");
 import cbor = require("cbor");
-import uuid = require("uuid");
 import { sign } from "cose-js";
 import { VerifierOptions } from "./VerifierOptions";
 import { resolvePublicKey } from "./resolvePublicKey";
 import { parseQRCode } from "./parseQrCode";
+import { PublicCovidPass } from "./PublicCovidPass";
+import { toJwt } from "./toJwt";
 
-const claims = {1: 'iss', 2: 'sub', 3: 'aud', 4: 'exp', 5: 'nbf', 6: 'iat', 7: 'jti'};
 const requiredClaims = ["iss", "nbf", "exp", "vc"];
-const headers = {1: 'alg', 4: 'kid'}
-
-function addBase32Padding(input: string): string {
-    let result = input;
-    while ((result.length % 8) !== 0) {
-        result += '=';
-    }
-    return result;
-}
-
-function toJwt(token: Map<any, any>): any {
-    let jwt = {};
-    for (const key of token.keys()) {
-        const claimName = claims[key] ?? key;
-        jwt[claimName] = claimName == 'jti' ? `urn:uuid:${uuid.stringify(token.get(key))}` : token.get(key);
-    }
-    return jwt;
-}
+const headers = { alg: 1, kid: 4 };
 
 function validJwt(jwt: any) : boolean {
     const keys = Object.keys(jwt);
@@ -45,16 +27,6 @@ function validJwt(jwt: any) : boolean {
     return true;
 }
 
-function toJson(header: Map<any, any>): any {
-    let json = {};
-    for (const key of header.keys()) {
-        const name = headers[key] ?? key;
-        const value = header.get(key);
-        json[name] = value instanceof Buffer ? value.toString('utf8') : value;
-    }
-    return json;
-}
-
 export class Verifier {
     trustedIssuers: string[];
 
@@ -66,36 +38,35 @@ export class Verifier {
         return this.trustedIssuers.includes(iss);
     }
 
-    public async verify(message: string): Promise<boolean> {
+    public async verify(message: string): Promise<PublicCovidPass | undefined> {
         const decodedPayload = parseQRCode(message);
         if (!decodedPayload) {
-            return false;
+            return undefined;
         }
 
         const coseSign1 = await cbor.decodeFirst(decodedPayload);
         if (!(coseSign1 instanceof cbor.Tagged) && coseSign1.tag !== 18) {
-            return false;
+            return undefined;
         }
 
-        const header = toJson(await cbor.decodeFirst(coseSign1.value[0]));
-
+        const header = await cbor.decodeFirst(coseSign1.value[0]);
         const cwt = await cbor.decodeFirst(coseSign1.value[2]);
         const jwt = toJwt(cwt);
 
         if (!this.isTrusted(jwt.iss) || !validJwt(jwt)) {
-            return false;
+            return undefined;
         }
-        
-        const key = await resolvePublicKey(`${jwt.iss}#${header.kid}`);
+
+        const key = await resolvePublicKey(`${jwt.iss}#${header.get(headers.kid)}`);
         if (!key) {
-            return false;
+            return undefined;
         }
 
         try {
-            await sign.verify(decodedPayload, {key});
-            return true;
+            await sign.verify(decodedPayload, { key });
+            return jwt;
         } catch (e) {
-            return false;
+            return undefined;
         }
     }
 }
