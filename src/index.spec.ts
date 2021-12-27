@@ -1,4 +1,4 @@
-import { ok } from "assert";
+import { deepEqual, ok } from "assert";
 import { Verifier } from "./index";
 
 describe("verifier", () => {
@@ -10,7 +10,25 @@ describe("verifier", () => {
         const valid =
             "NZCP:/1/2KCEVIQEIVVWK6JNGEASNICZAEP2KALYDZSGSZB2O5SWEOTOPJRXALTDN53GSZBRHEXGQZLBNR2GQLTOPICRUYMBTIFAIGTUKBAAUYTWMOSGQQDDN5XHIZLYOSBHQJTIOR2HA4Z2F4XXO53XFZ3TGLTPOJTS6MRQGE4C6Y3SMVSGK3TUNFQWY4ZPOYYXQKTIOR2HA4Z2F4XW46TDOAXGG33WNFSDCOJONBSWC3DUNAXG46RPMNXW45DFPB2HGL3WGFTXMZLSONUW63TFGEXDALRQMR2HS4DFQJ2FMZLSNFTGSYLCNRSUG4TFMRSW45DJMFWG6UDVMJWGSY2DN53GSZCQMFZXG4LDOJSWIZLOORUWC3CTOVRGUZLDOSRWSZ3JOZSW4TTBNVSWISTBMNVWUZTBNVUWY6KOMFWWKZ2TOBQXE4TPO5RWI33CNIYTSNRQFUYDILJRGYDVAYFE6VGU4MCDGK7DHLLYWHVPUS2YIDJOA6Y524TD3AZRM263WTY2BE4DPKIF27WKF3UDNNVSVWRDYIYVJ65IRJJJ6Z25M2DO4YZLBHWFQGVQR5ZLIWEQJOZTS3IQ7JTNCFDX";
 
-        ok(await verifier.verify(valid));
+        deepEqual(await verifier.verify(valid), {
+            iss: "did:web:nzcp.covid19.health.nz",
+            exp: 1951416330,
+            nbf: 1635883530,
+            vc: {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://nzcp.covid19.health.nz/contexts/v1",
+                ],
+                version: "1.0.0",
+                type: ["VerifiableCredential", "PublicCovidPass"],
+                credentialSubject: {
+                    givenName: "Jack",
+                    familyName: "Sparrow",
+                    dob: "1960-04-16",
+                },
+            },
+            jti: "urn:uuid:60a4f54d-4e30-4332-be33-ad78b1eafa4b",
+        });
     });
 
     it("should return false for QR code with invalid schema", async () => {
