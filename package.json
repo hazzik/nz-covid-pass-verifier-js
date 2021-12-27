@@ -30,5 +30,8 @@
     "did-resolver": "^3.1.5",
     "uuid": "^8.3.2",
     "web-did-resolver": "^2.0.11"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
