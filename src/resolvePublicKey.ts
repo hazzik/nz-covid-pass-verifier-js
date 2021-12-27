@@ -16,7 +16,7 @@ function fromJsonWebKey(key: JsonWebKey) : Key {
     }
 }
 
-export async function resolve(reference: string) : Promise<Key | undefined> {
+export async function resolvePublicKey(reference: string) : Promise<Key | undefined> {
     const did = await didResolver.resolve(reference);
     if (!did.didDocument.assertionMethod?.includes(reference)) {
         return undefined;

@@ -3,7 +3,8 @@ import cbor = require("cbor");
 import uuid = require("uuid");
 import { sign } from "cose-js";
 import { VerifierOptions } from "./VerifierOptions";
-import { resolve as resolvePublicKey } from "./PublicKeyResolver";
+import { resolvePublicKey } from "./resolvePublicKey";
+import { parseQRCode } from "./parseQrCode";
 
 const claims = {1: 'iss', 2: 'sub', 3: 'aud', 4: 'exp', 5: 'nbf', 6: 'iat', 7: 'jti'};
 const requiredClaims = ["iss", "nbf", "exp", "vc"];
@@ -66,13 +67,11 @@ export class Verifier {
     }
 
     public async verify(message: string): Promise<boolean> {
-        const [schema, version, payload] = message.split("/");
-        if (schema !== "NZCP:" || version !== "1") {
+        const decodedPayload = parseQRCode(message);
+        if (!decodedPayload) {
             return false;
         }
 
-        const paddedPayload = addBase32Padding(payload);
-        const decodedPayload = base32Decode(paddedPayload, 'RFC4648');
         const coseSign1 = await cbor.decodeFirst(decodedPayload);
         if (!(coseSign1 instanceof cbor.Tagged) && coseSign1.tag !== 18) {
             return false;
