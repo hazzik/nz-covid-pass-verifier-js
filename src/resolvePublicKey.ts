@@ -9,11 +9,19 @@ function fromJsonWebKey(key: JsonWebKey) : Key {
     return {
         crv: key.crv,
         kty: key.kty,
-        k: key.k ? Buffer.from(key.k, 'base64url').toString("hex") : undefined,
-        d: key.d ? Buffer.from(key.d, 'base64url').toString("hex") : undefined,
-        x: key.x ? Buffer.from(key.x, 'base64url').toString("hex") : undefined,
-        y: key.y ? Buffer.from(key.y, 'base64url').toString("hex") : undefined,
+        k: base64urlToHex(key.k),
+        d: base64urlToHex(key.d),
+        x: base64urlToHex(key.x),
+        y: base64urlToHex(key.y),
     }
+}
+
+function base64urlToHex(n: string): string {
+    if (n) {
+        return Buffer.from(n, 'base64url').toString("hex");
+    }
+
+    return undefined;
 }
 
 export async function resolvePublicKey(reference: string) : Promise<Key | undefined> {
