@@ -8,7 +8,7 @@ function addBase32Padding(input: string): string {
     return result;
 }
 
-export function parseQRCode(qrCode: string) : ArrayBuffer | undefined {
+export function parseURI(qrCode: string) : ArrayBuffer | undefined {
     const [schema, version, payload] = qrCode.split("/");
     if (schema !== "NZCP:" || version !== "1") {
         return undefined;

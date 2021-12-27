@@ -2,7 +2,7 @@ import cbor = require("cbor");
 import { sign } from "cose-js";
 import { VerifierOptions } from "./VerifierOptions";
 import { resolvePublicKey } from "./resolvePublicKey";
-import { parseQRCode } from "./parseQrCode";
+import { parseURI } from "./parseURI";
 import { PublicCovidPass } from "./PublicCovidPass";
 import { toJwt } from "./toJwt";
 
@@ -39,7 +39,7 @@ export class Verifier {
     }
 
     public async verify(message: string): Promise<PublicCovidPass | undefined> {
-        const decodedPayload = parseQRCode(message);
+        const decodedPayload = parseURI(message);
         if (!decodedPayload) {
             return undefined;
         }
