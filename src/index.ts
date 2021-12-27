@@ -9,10 +9,10 @@ import { verifySignature } from "./verifySignature";
 const requiredClaims = ["iss", "nbf", "exp", "vc"];
 const headers = { alg: 1, kid: 4 };
 
-function validJwt(jwt: any) : boolean {
+function validJwt(jwt: any): boolean {
     const keys = Object.keys(jwt);
 
-    if (!requiredClaims.every(c => keys.includes(c))) {
+    if (!requiredClaims.every((c) => keys.includes(c))) {
         return false;
     }
 
@@ -31,7 +31,9 @@ export class Verifier {
     trustedIssuers: string[];
 
     constructor(options?: VerifierOptions) {
-        this.trustedIssuers = options?.trustedIssuers ?? ["did:web:nzcp.identity.health.nz"];
+        this.trustedIssuers = options?.trustedIssuers ?? [
+            "did:web:nzcp.identity.health.nz",
+        ];
     }
 
     isTrusted(iss: string) {
@@ -57,12 +59,14 @@ export class Verifier {
             return undefined;
         }
 
-        const key = await resolvePublicKey(`${jwt.iss}#${header.get(headers.kid)}`);
+        const key = await resolvePublicKey(
+            `${jwt.iss}#${header.get(headers.kid)}`
+        );
         if (!key) {
             return undefined;
         }
 
-        if (!await verifySignature(decodedPayload, key)) {
+        if (!(await verifySignature(decodedPayload, key))) {
             return undefined;
         }
 

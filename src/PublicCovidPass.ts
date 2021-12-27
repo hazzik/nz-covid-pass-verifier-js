@@ -10,7 +10,7 @@ export interface PublicCovidPass {
             givenName: string;
             familyName: string;
             dob: string;
-        }
-    }
+        };
+    };
     jti?: string;
 }

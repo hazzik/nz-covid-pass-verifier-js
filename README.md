@@ -21,7 +21,7 @@ import { Verifier } from "nz-covid-pass-verifier";
 
 let uri = "NZCP:/1/2KCE3IQEJB5DCMSLMY3....";
 
-new Verifier().verify(uri).then(result => {
+new Verifier().verify(uri).then((result) => {
     console.log(result);
 });
 ```
