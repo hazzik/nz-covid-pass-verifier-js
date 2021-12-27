@@ -1,15 +1,11 @@
 import base32Decode = require("base32-decode");
 import cbor = require("cbor");
 import uuid = require("uuid");
-import { Resolver } from "did-resolver";
-import { getResolver } from "web-did-resolver";
 import { sign } from "cose-js";
 import { VerifierOptions } from "./VerifierOptions";
+import { resolve as resolvePublicKey } from "./PublicKeyResolver";
 
-const webResolver = getResolver();
-const didResolver = new Resolver({...webResolver});
-
-const claims = {1: 'iss', 2: 'sub', 3: 'aud', 4: 'exp', 5: 'nbf', 6: 'iat', 7: 'cti'};
+const claims = {1: 'iss', 2: 'sub', 3: 'aud', 4: 'exp', 5: 'nbf', 6: 'iat', 7: 'jti'};
 const requiredClaims = ["iss", "nbf", "exp", "vc"];
 const headers = {1: 'alg', 4: 'kid'}
 
@@ -25,9 +21,27 @@ function toJwt(token: Map<any, any>): any {
     let jwt = {};
     for (const key of token.keys()) {
         const claimName = claims[key] ?? key;
-        jwt[claimName] = claimName == 'cti' ? `urn:uuid:${uuid.stringify(token.get(key))}` : token.get(key);
+        jwt[claimName] = claimName == 'jti' ? `urn:uuid:${uuid.stringify(token.get(key))}` : token.get(key);
     }
     return jwt;
+}
+
+function validJwt(jwt: any) : boolean {
+    const keys = Object.keys(jwt);
+
+    if (!requiredClaims.every(c => keys.includes(c))) {
+        return false;
+    }
+
+    if (jwt.exp < Math.floor(Date.now() / 1000)) {
+        return false;
+    }
+
+    if (jwt.nbf > Math.floor(Date.now() / 1000)) {
+        return false;
+    }
+
+    return true;
 }
 
 function toJson(header: Map<any, any>): any {
@@ -47,6 +61,10 @@ export class Verifier {
         this.trustedIssuers = options?.trustedIssuers ?? ["did:web:nzcp.identity.health.nz"];
     }
 
+    isTrusted(iss: string) {
+        return this.trustedIssuers.includes(iss);
+    }
+
     public async verify(message: string): Promise<boolean> {
         const [schema, version, payload] = message.split("/");
         if (schema !== "NZCP:" || version !== "1") {
@@ -64,35 +82,14 @@ export class Verifier {
 
         const cwt = await cbor.decodeFirst(coseSign1.value[2]);
         const jwt = toJwt(cwt);
-        if (!requiredClaims.every(claim => Object.keys(jwt).includes(claim))) {
+
+        if (!this.isTrusted(jwt.iss) || !validJwt(jwt)) {
             return false;
         }
-
-        if (jwt.exp < Math.floor(Date.now() / 1000)) {
+        
+        const key = await resolvePublicKey(`${jwt.iss}#${header.kid}`);
+        if (!key) {
             return false;
-        }
-
-        if (jwt.nbf > Math.floor(Date.now() / 1000)) {
-            return false;
-        }
-
-        if (!this.trustedIssuers.includes(jwt.iss)) {
-            return false;
-        }
-
-        const did = await didResolver.resolve(jwt.iss);
-        if (!did.didDocument.assertionMethod?.includes(`${jwt.iss}#${header.kid}`)) {
-            return false;
-        }
-
-        const verificationMethod = did.didDocument.verificationMethod.find(v => v.id === `${jwt.iss}#${header.kid}`);
-        if (!verificationMethod || verificationMethod.type !== "JsonWebKey2020") {
-            return false;
-        }
-
-        const key = {
-            x: Buffer.from(verificationMethod.publicKeyJwk.x, 'base64url'),
-            y: Buffer.from(verificationMethod.publicKeyJwk.y, 'base64url'),
         }
 
         try {
