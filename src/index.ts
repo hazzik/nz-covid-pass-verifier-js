@@ -1,10 +1,10 @@
 import cbor = require("cbor");
-import { sign } from "cose-js";
 import { VerifierOptions } from "./VerifierOptions";
 import { resolvePublicKey } from "./resolvePublicKey";
 import { parseURI } from "./parseURI";
 import { PublicCovidPass } from "./PublicCovidPass";
 import { toJwt } from "./toJwt";
+import { verifySignature } from "./verifySignature";
 
 const requiredClaims = ["iss", "nbf", "exp", "vc"];
 const headers = { alg: 1, kid: 4 };
@@ -62,11 +62,10 @@ export class Verifier {
             return undefined;
         }
 
-        try {
-            await sign.verify(decodedPayload, { key });
-            return jwt;
-        } catch (e) {
+        if (!await verifySignature(decodedPayload, key)) {
             return undefined;
         }
+
+        return jwt;
     }
 }
