@@ -1,7 +1,7 @@
 {
   "name": "nz-covid-pass-verifier",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.1.1",
+  "description": "TypeScript implementation of [NZ COVID Pass - Technical Specification v1](https://nzcp.covid19.health.nz/).",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -35,5 +35,27 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hazzik/nz-covid-pass-verifier-node.git"
+  },
+  "keywords": [
+    "typescript",
+    "covid",
+    "new zealand",
+    "nz",
+    "covid pass",
+    "vaccine pass",
+    "vaccine certificate",
+    "nzcp",
+    "verifier",
+    "validator",
+    "parser",
+    "decoder"
+  ],
+  "bugs": {
+    "url": "https://github.com/hazzik/nz-covid-pass-verifier-node/issues"
+  },
+  "homepage": "https://github.com/hazzik/nz-covid-pass-verifier-node#readme"
 }
